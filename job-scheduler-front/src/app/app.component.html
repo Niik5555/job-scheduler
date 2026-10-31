@@ -1,0 +1,146 @@
+<main>
+  <header>
+    <h1>Job scheduler</h1>
+    <p>Refreshes every 3 seconds</p>
+  </header>
+
+  @if (error()) {
+    <p class="error">{{ error() }}</p>
+  }
+
+  <section>
+    <h2>New job</h2>
+    <div class="form">
+      <input #name placeholder="Name, for example nightly-report" />
+      <select #type>
+        <option value="http_request">http_request</option>
+        <option value="sleep">sleep</option>
+        <option value="flaky">flaky (fails at random)</option>
+      </select>
+      <input
+        #payload
+        placeholder='Payload JSON, for example {"url":"https://example.com"}'
+      />
+      <input
+        #cron
+        placeholder="Cron with 6 fields, for example 0/30 * * * * *"
+      />
+      <label
+        >Max retries <input #retries type="number" value="3" min="0" max="10"
+      /></label>
+      <button
+        (click)="
+          create(
+            name.value,
+            type.value,
+            payload.value,
+            cron.value,
+            +retries.value
+          )
+        "
+      >
+        Create job
+      </button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Jobs</h2>
+    @if (jobs().length === 0) {
+      <p class="empty">
+        No jobs yet. Create one above, or trigger it by hand once it exists.
+      </p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Cron</th>
+            <th>Next run</th>
+            <th>Retries</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (j of jobs(); track j.id) {
+            <tr [class.paused]="!j.enabled">
+              <td>{{ j.name }}</td>
+              <td>{{ j.type }}</td>
+              <td>{{ j.cronExpression ?? "manual only" }}</td>
+              <td>
+                {{ j.nextRunAt ? (j.nextRunAt | date: "medium") : "none" }}
+              </td>
+              <td>{{ j.maxRetries }}</td>
+              <td class="actions">
+                <button (click)="trigger(j.id)">Run now</button>
+                <button class="ghost" (click)="toggle(j.id)">
+                  {{ j.enabled ? "Pause" : "Resume" }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+
+  <section>
+    <div class="row">
+      <h2>Runs</h2>
+      <div class="tabs">
+        <button [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">
+          All runs
+        </button>
+        <button
+          [class.active]="filter() === 'DEAD'"
+          (click)="setFilter('DEAD')"
+        >
+          Dead-letter queue
+        </button>
+      </div>
+    </div>
+    @if (runs().length === 0) {
+      <p class="empty">
+        {{
+          filter() === "DEAD"
+            ? "Nothing in the dead-letter queue."
+            : "No runs yet."
+        }}
+      </p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Job</th>
+            <th>Attempt</th>
+            <th>Status</th>
+            <th>Worker</th>
+            <th>Error</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of runs(); track r.id) {
+            <tr>
+              <td>#{{ r.id }}</td>
+              <td>{{ r.jobName }}</td>
+              <td>{{ r.attempt }}</td>
+              <td>
+                <span class="status {{ r.status }}">{{ r.status }}</span>
+              </td>
+              <td>{{ r.workerId ?? "" }}</td>
+              <td class="err">{{ r.error ?? "" }}</td>
+              <td>
+                @if (r.status === "DEAD") {
+                  <button (click)="replay(r.id)">Replay</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</main>
