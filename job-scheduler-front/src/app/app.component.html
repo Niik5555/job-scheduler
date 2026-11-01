@@ -45,6 +45,22 @@
   </section>
 
   <section>
+    <h2>Workers online: {{ workers().length }}</h2>
+    @if (workers().length === 0) {
+      <p class="empty">
+        No workers online. Start them with docker compose up -d --scale
+        worker=3.
+      </p>
+    } @else {
+      <p class="workerlist">
+        @for (w of workers(); track w) {
+          <span class="worker">{{ w }}</span>
+        }
+      </p>
+    }
+  </section>
+
+  <section>
     <h2>Jobs</h2>
     @if (jobs().length === 0) {
       <p class="empty">

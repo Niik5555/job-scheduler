@@ -31,10 +31,10 @@ interface Run {
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
-
 export class DashboardComponent implements OnInit, OnDestroy {
   jobs = signal<Job[]>([]);
   runs = signal<Run[]>([]);
+  workers = signal<string[]>([]);
   filter = signal<'ALL' | 'DEAD'>('ALL');
   error = signal('');
   private timer?: ReturnType<typeof setInterval>;
@@ -60,6 +60,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.error.set(
           'Cannot reach the API at localhost:8080. Start the Spring Boot backend.',
         ),
+    });
+    this.http.get<string[]>(`${API}/workers`).subscribe({
+      next: (w) => this.workers.set(w),
+      error: () => this.workers.set([]),
     });
     const query = this.filter() === 'DEAD' ? '?status=DEAD' : '';
     this.http

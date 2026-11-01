@@ -16,12 +16,19 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
   worker:
     build: ./worker
     environment:
       RABBIT_HOST: rabbitmq
+      REDIS_HOST: redis
     depends_on:
       - rabbitmq
+      - redis
     restart: unless-stopped
 
 volumes:

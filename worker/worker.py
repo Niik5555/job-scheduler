@@ -2,12 +2,15 @@ import json
 import os
 import random
 import socket
+import threading
 import time
 
 import pika
+import redis
 import requests
 
 RABBIT_HOST = os.getenv("RABBIT_HOST", "localhost")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 WORKER_ID = f"{socket.gethostname()}-{os.getpid()}"
 
 
@@ -62,7 +65,20 @@ def on_message(ch, method, props, body):
     ch.basic_ack(method.delivery_tag)
 
 
+def heartbeat_loop():
+    """Refreshes a Redis key with a 15s TTL every 5s. If this process dies, the key
+    expires and the backend knows the worker is gone."""
+    client = redis.Redis(host=REDIS_HOST, decode_responses=True)
+    while True:
+        try:
+            client.set(f"worker:{WORKER_ID}", "1", ex=15)
+        except redis.RedisError as exc:
+            print(f"[{WORKER_ID}] heartbeat failed: {exc}")
+        time.sleep(5)
+
+
 def main():
+    threading.Thread(target=heartbeat_loop, daemon=True).start()
     while True:
         try:
             conn = pika.BlockingConnection(

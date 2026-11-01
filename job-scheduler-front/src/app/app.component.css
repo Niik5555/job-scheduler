@@ -161,6 +161,18 @@ td.err {
 .status.DEAD::before {
   background: #c93a3a;
 }
+.worker {
+  display: inline-block;
+  padding: 2px 10px;
+  margin: 0 6px 6px 0;
+  border: 1px solid #b9c2cb;
+  border-radius: 12px;
+  font-size: 13px;
+  background: #fff;
+}
+.workerlist {
+  margin: 0;
+}
 .empty {
   color: #5b6773;
   margin: 0;

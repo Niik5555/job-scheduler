@@ -31,6 +31,7 @@ public class ResultListener {
             case "RUNNING" -> {
                 run.setStatus(RunStatus.RUNNING);
                 run.setStartedAt(Instant.now());
+                run.setError(null);
             }
             case "SUCCEEDED" -> {
                 run.setStatus(RunStatus.SUCCEEDED);

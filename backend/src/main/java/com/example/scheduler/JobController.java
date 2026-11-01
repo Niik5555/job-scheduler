@@ -30,6 +30,7 @@ public class JobController {
     private final JobRepository jobs;
     private final JobRunRepository runs;
     private final DispatchService dispatch;
+    private final WorkerRegistry workers;
 
     public record CreateJobRequest(
             @NotBlank String name,
@@ -89,6 +90,11 @@ public class JobController {
     @GetMapping("/jobs/{id}/runs")
     public List<JobRun> runsForJob(@PathVariable Long id) {
         return runs.findTop50ByJobIdOrderByIdDesc(id);
+    }
+
+    @GetMapping("/workers")
+    public List<String> listWorkers() {
+        return workers.aliveWorkers();
     }
 
     @GetMapping("/runs")
